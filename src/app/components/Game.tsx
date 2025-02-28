@@ -12,13 +12,9 @@ const Game = () => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Canvas boyutlarını ayarla
-    canvas.width = 800;
-    canvas.height = 600;
-
     // Oyun değişkenleri
-    const CENTER_X = canvas.width / 2;
-    const CENTER_Y = canvas.height / 2;
+    let CENTER_X = canvas.width / 2;
+    let CENTER_Y = canvas.height / 2;
     const ROTATION_SPEED = 0.02;
     let currentAngle = 0;
     let sticks: Stick[] = [];
@@ -26,6 +22,26 @@ const Game = () => {
     let gameOver = false;
     let currentLevel = 1;
     let remainingSticks = 1;
+
+    // Ekran boyutlarını al ve canvas'ı ayarla
+    const updateCanvasSize = () => {
+      const screenWidth = window.innerWidth;
+      const screenHeight = window.innerHeight;
+      
+      // Mobil ekranlar için uygun boyut
+      canvas.width = Math.min(screenWidth * 0.95, 400);
+      canvas.height = Math.min(screenHeight * 0.7, 600);
+      
+      // Merkez noktaları güncelle
+      CENTER_X = canvas.width / 2;
+      CENTER_Y = canvas.height / 2;
+    };
+
+    // İlk boyutlandırma
+    updateCanvasSize();
+
+    // Ekran boyutu değiştiğinde canvas'ı güncelle
+    window.addEventListener('resize', updateCanvasSize);
 
     // Merkez daire
     const centerCircle = {
@@ -191,7 +207,23 @@ const Game = () => {
       }
     }
 
+    // Dokunmatik ekran ve fare olayları için işleyiciler
+    function handleTouch(e: TouchEvent) {
+      e.preventDefault();
+      if (currentStick && !currentStick.isRotating) {
+        currentStick.isRotating = true;
+      }
+    }
+
+    function handleClick() {
+      if (currentStick && !currentStick.isRotating) {
+        currentStick.isRotating = true;
+      }
+    }
+
     // Event listener'ları ekle
+    canvas.addEventListener("touchstart", handleTouch);
+    canvas.addEventListener("click", handleClick);
     document.addEventListener("keydown", handleKeyDown);
 
     // İlk çubuğu oluştur ve oyunu başlat
@@ -201,14 +233,19 @@ const Game = () => {
     // Cleanup
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
+      canvas.removeEventListener("touchstart", handleTouch);
+      canvas.removeEventListener("click", handleClick);
+      window.removeEventListener('resize', updateCanvasSize);
     };
   }, []);
 
   return (
-    <canvas
-      ref={canvasRef}
-      className="border-2 border-black bg-white"
-    />
+    <div className="w-full h-full flex items-center justify-center p-4">
+      <canvas
+        ref={canvasRef}
+        className="border-2 border-black bg-white touch-none"
+      />
+    </div>
   );
 };
 
